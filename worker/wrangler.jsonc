@@ -1,7 +1,7 @@
 {
   // Cloudflare Worker configuration for the private push platform.
   // Do NOT put secrets in this file. Use `npx wrangler secret put <NAME>`.
-  "name": "my-push-platform",
+  "name": "push-notification",
   "main": "src/index.ts",
   "compatibility_date": "2026-08-01",
 
@@ -9,7 +9,7 @@
     {
       "binding": "DB",
       "database_name": "push-platform",
-      "database_id": "YOUR_D1_DATABASE_ID"
+      "database_id": "e6790eae-b7bc-4eaa-a0d8-cb1918851f67"
     }
   ],
 
