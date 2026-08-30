@@ -1,0 +1,18 @@
+{
+  "name": "push-platform-worker",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "typecheck": "tsc --noEmit",
+    "db:migrate:local": "wrangler d1 migrations apply push-platform --local",
+    "db:migrate:remote": "wrangler d1 migrations apply push-platform --remote"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20250810.0",
+    "typescript": "^5.5.0",
+    "wrangler": "^4.0.0"
+  }
+}

@@ -1,0 +1,38 @@
+{
+  // Cloudflare Worker configuration for the private push platform.
+  // Do NOT put secrets in this file. Use `npx wrangler secret put <NAME>`.
+  "name": "my-push-platform",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-08-01",
+
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "push-platform",
+      "database_id": "YOUR_D1_DATABASE_ID"
+    }
+  ],
+
+  "assets": {
+    "directory": "./public",
+    "binding": "ASSETS"
+  },
+
+  "triggers": {
+    "crons": ["*/5 * * * *"]
+  },
+
+  "observability": {
+    "enabled": true
+  },
+
+  "vars": {
+    "BATCH_SIZE": "5",
+    "MAX_BODY_BYTES": "8192"
+  }
+
+  // Required secrets (set with `npx wrangler secret put`):
+  //   INTERNAL_JOB_SECRET           - protects /v1/internal/process and cron
+  //   VAPID_MASTER_ENCRYPTION_KEY   - AES key (hex/base64) used to encrypt
+  //                                   per-site VAPID private keys at rest in D1
+}
