@@ -60,7 +60,7 @@ async function listSitesHandler(ctx: Parameters<Route["handler"]>[0]): Promise<R
   return jsonResponse({ sites: await listSites(ctx.env) });
 }
 
-async function setSiteStatusHandler(disabledStatus: boolean) {
+function setSiteStatusHandler(disabledStatus: boolean) {
   return async (ctx: Parameters<Route["handler"]>[0]): Promise<Response> => {
     const denied = await requireAdmin(ctx);
     if (denied) return denied;

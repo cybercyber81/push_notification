@@ -29,13 +29,13 @@ async function encryptPayload(
     throw new Error("invalid p256dh key");
   }
 
-  const ephemeral = await crypto.subtle.generateKey(
+  const ephemeral = (await crypto.subtle.generateKey(
     { name: "ECDH", namedCurve: "P-256" },
     true,
     ["deriveBits"]
-  );
+  )) as CryptoKeyPair;
   const ephemeralPublicRaw = new Uint8Array(
-    await crypto.subtle.exportKey("raw", ephemeral.publicKey)
+    (await crypto.subtle.exportKey("raw", ephemeral.publicKey)) as ArrayBuffer
   );
 
   const userKey = await crypto.subtle.importKey(
@@ -48,7 +48,7 @@ async function encryptPayload(
 
   const ecdhSecret = new Uint8Array(
     await crypto.subtle.deriveBits(
-      { name: "ECDH", public: userKey },
+      { name: "ECDH", public: userKey } as unknown as SubtleCryptoDeriveKeyAlgorithm,
       ephemeral.privateKey,
       256
     )

@@ -8,17 +8,17 @@ export interface VapidKeypair {
 }
 
 export async function generateVapidKeypair(): Promise<VapidKeypair> {
-  const pair = await crypto.subtle.generateKey(
+  const pair = (await crypto.subtle.generateKey(
     { name: "ECDSA", namedCurve: "P-256" },
     true,
     ["sign", "verify"]
-  );
+  )) as CryptoKeyPair;
 
   const publicKey = new Uint8Array(
-    await crypto.subtle.exportKey("raw", pair.publicKey)
+    (await crypto.subtle.exportKey("raw", pair.publicKey)) as ArrayBuffer
   );
   const privateKey = new Uint8Array(
-    await crypto.subtle.exportKey("pkcs8", pair.privateKey)
+    (await crypto.subtle.exportKey("pkcs8", pair.privateKey)) as ArrayBuffer
   );
 
   let binary = "";
