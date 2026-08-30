@@ -8,7 +8,7 @@
   "d1_databases": [
     {
       "binding": "DB",
-      "database_name": "push-platform",
+      "database_name": "push-platform", // provisioned via Cloudflare dashboard
       "database_id": "e6790eae-b7bc-4eaa-a0d8-cb1918851f67"
     }
   ],
