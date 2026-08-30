@@ -28,6 +28,7 @@ export async function upsertSubscription(
          p256dh = excluded.p256dh,
          auth = excluded.auth,
          status = 'active',
+         user_agent = excluded.user_agent,
          locale = COALESCE(excluded.locale, subscriptions.locale),
          updated_at = CURRENT_TIMESTAMP,
          last_seen_at = CURRENT_TIMESTAMP`

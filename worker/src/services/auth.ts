@@ -1,5 +1,5 @@
 import type { Env, SiteRow } from "../types";
-import { sha256Hex } from "./crypto";
+import { sha256Hex, timingSafeEqual } from "./crypto";
 
 export interface SiteAuth {
   site: SiteRow;
@@ -20,7 +20,11 @@ export async function authenticateApiKey(
   if (!match) return null;
 
   const key = match[1];
-  if (key === env.ADMIN_AUTH_SECRET && env.ADMIN_AUTH_SECRET.length > 0) {
+  if (
+    env.ADMIN_AUTH_SECRET &&
+    env.ADMIN_AUTH_SECRET.length > 0 &&
+    timingSafeEqual(key, env.ADMIN_AUTH_SECRET)
+  ) {
     // Admin token is handled separately; never treat it as a site key.
     return null;
   }
@@ -38,10 +42,9 @@ export async function authenticateApiKey(
 
   if (!row) return null;
 
-  env.DB.prepare("UPDATE site_api_keys SET last_used_at = CURRENT_TIMESTAMP WHERE id = ?")
+  await env.DB.prepare("UPDATE site_api_keys SET last_used_at = CURRENT_TIMESTAMP WHERE id = ?")
     .bind(row.api_key_id)
-    .run()
-    .catch(() => {});
+    .run();
 
   return { site: row as unknown as SiteRow, apiKeyId: row.api_key_id };
 }
@@ -50,7 +53,7 @@ export async function isAdminRequest(req: Request, env: Env): Promise<boolean> {
   if (!env.ADMIN_AUTH_SECRET) return false;
   const header = req.headers.get("Authorization") || "";
   const match = /^Bearer\s+(.+)$/.exec(header.trim());
-  return !!match && match[1] === env.ADMIN_AUTH_SECRET;
+  return !!match && timingSafeEqual(match[1], env.ADMIN_AUTH_SECRET);
 }
 
 /**

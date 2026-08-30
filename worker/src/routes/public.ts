@@ -39,8 +39,15 @@ async function publicConfig(
 }
 
 async function readJson(req: Request, maxBytes: number): Promise<unknown> {
+  const contentLength = req.headers.get("Content-Length");
+  if (contentLength && Number(contentLength) > maxBytes) {
+    throw new Error("body_too_large");
+  }
+
   const text = await req.text();
-  if (text.length > maxBytes) throw new Error("body_too_large");
+  if (new TextEncoder().encode(text).length > maxBytes) {
+    throw new Error("body_too_large");
+  }
   try {
     return JSON.parse(text);
   } catch {

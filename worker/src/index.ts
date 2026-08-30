@@ -1,6 +1,10 @@
 import type { Env } from "./types";
 import { handleRequest } from "./router";
-import { dueScheduledCampaigns, startCampaign } from "./db/campaigns";
+import {
+  dueScheduledCampaigns,
+  staleProcessingCampaigns,
+  startCampaign,
+} from "./db/campaigns";
 import { purgeOldInactiveSubscriptions } from "./db/subscriptions";
 import { processCampaignBatch } from "./services/campaign";
 
@@ -45,16 +49,32 @@ export default {
                     method: "POST",
                     headers: { Authorization: `Bearer ${env.INTERNAL_JOB_SECRET}` },
                   }
-                ).catch(() => {})
+                ).catch((err) =>
+                  console.error("self_chain_fetch_error", campaign.id, err)
+                )
               );
             } else {
               // Fallback without SELF_BASE_URL: process one batch per cron tick.
               ctx.waitUntil(
                 processCampaignBatch(env, campaign.id)
                   .then(() => {})
-                  .catch(() => {})
+                  .catch((err) =>
+                    console.error("process_campaign_error", campaign.id, err)
+                  )
               );
             }
+          }
+
+          // Recover campaigns whose self-chaining continuation died mid-flight.
+          const stale = await staleProcessingCampaigns(env, 5);
+          for (const campaign of stale) {
+            ctx.waitUntil(
+              processCampaignBatch(env, campaign.id)
+                .then(() => {})
+                .catch((err) =>
+                  console.error("stale_campaign_process_error", campaign.id, err)
+                )
+            );
           }
 
           await purgeOldInactiveSubscriptions(env, 90);

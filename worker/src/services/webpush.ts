@@ -62,26 +62,18 @@ async function encryptPayload(
     32
   );
 
-  // prk = HKDF(salt="", ikm=ikm, info="Content-Encoding: auth" || 0x00)
-  const prk = await hkdf(
-    new Uint8Array(0),
-    ikm,
-    concat(utf8("Content-Encoding: auth"), new Uint8Array(1)),
-    32
-  );
-
   const salt = new Uint8Array(16);
   crypto.getRandomValues(salt);
 
   const cek = await hkdf(
     salt,
-    prk,
+    ikm,
     concat(utf8("Content-Encoding: aes128gcm"), new Uint8Array(1)),
     16
   );
   const nonce = await hkdf(
     salt,
-    prk,
+    ikm,
     concat(utf8("Content-Encoding: nonce"), new Uint8Array(1)),
     12
   );
@@ -96,13 +88,12 @@ async function encryptPayload(
     await crypto.subtle.encrypt({ name: "AES-GCM", iv: nonce }, cekKey, padded)
   );
 
-  // aes128gcm header: salt(16) || dhlen(2 BE) || dh(65) || rs(4 BE = 4096) || idlen(1 = 0)
+  // aes128gcm header: salt(16) || rs(4 BE = 4096) || idlen(1 = 65) || keyid(65)
   const header = concat(
     salt,
-    new Uint8Array([0, ephemeralPublicRaw.length]),
-    ephemeralPublicRaw,
     new Uint8Array([0, 0, 0x10, 0x00]),
-    new Uint8Array([0])
+    new Uint8Array([ephemeralPublicRaw.length]),
+    ephemeralPublicRaw
   );
 
   return concat(header, ciphertext);

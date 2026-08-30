@@ -49,7 +49,10 @@ async function createSiteHandler(ctx: Parameters<Route["handler"]>[0]): Promise<
       },
       201
     );
-  } catch {
+  } catch (err) {
+    if (err instanceof Error && err.message === "domain_conflict") {
+      return jsonError(409, "domain_conflict");
+    }
     return jsonError(500, "could_not_create_site");
   }
 }

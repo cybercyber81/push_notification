@@ -4,6 +4,7 @@ export interface Env {
   ADMIN_AUTH_SECRET: string;
   VAPID_MASTER_ENCRYPTION_KEY: string;
   SELF_BASE_URL?: string;
+  VAPID_SUBJECT?: string;
   BATCH_SIZE: string;
   MAX_BODY_BYTES: string;
 }

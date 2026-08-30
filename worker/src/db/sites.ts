@@ -53,17 +53,25 @@ export async function createSite(
       ? siteKey
       : `site_${randomToken(6).toLowerCase()}`;
 
-  const result = await env.DB.batch([
-    env.DB.prepare(
-      `INSERT INTO sites (site_key, name, domain, status, vapid_public_key, vapid_private_key_encrypted)
-       VALUES (?, ?, ?, 'active', ?, ?)`
-    ).bind(finalKey, name, domain, vapid.publicKey, encryptedPrivateKey),
-    // site id is needed for the api key row; use last_insert_rowid via subselect
-    env.DB.prepare(
-      `INSERT INTO site_api_keys (site_id, key_prefix, key_hash, status)
-       VALUES ((SELECT id FROM sites WHERE site_key = ?), ?, ?, 'active')`
-    ).bind(finalKey, prefix, hash),
-  ]);
+  let result;
+  try {
+    result = await env.DB.batch([
+      env.DB.prepare(
+        `INSERT INTO sites (site_key, name, domain, status, vapid_public_key, vapid_private_key_encrypted)
+         VALUES (?, ?, ?, 'active', ?, ?)`
+      ).bind(finalKey, name, domain, vapid.publicKey, encryptedPrivateKey),
+      // site id is needed for the api key row; use last_insert_rowid via subselect
+      env.DB.prepare(
+        `INSERT INTO site_api_keys (site_id, key_prefix, key_hash, status)
+         VALUES ((SELECT id FROM sites WHERE site_key = ?), ?, ?, 'active')`
+      ).bind(finalKey, prefix, hash),
+    ]);
+  } catch (err) {
+    if (String(err).includes("UNIQUE constraint failed: sites.domain")) {
+      throw new Error("domain_conflict");
+    }
+    throw err;
+  }
 
   if (!result[0].success || !result[1].success) {
     throw new Error("failed to create site");
@@ -121,6 +129,9 @@ export async function rotateApiKey(
   env: Env,
   siteId: number
 ): Promise<string | null> {
+  const site = await getSiteById(env, siteId);
+  if (!site) return null;
+
   const key = `pp_live_${randomToken(30)}`;
   const prefix = key.slice(0, 12);
   const hash = await sha256Hex(key);

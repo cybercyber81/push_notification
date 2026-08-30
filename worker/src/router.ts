@@ -38,7 +38,11 @@ function matchPattern(
   for (let i = 0; i < patternParts.length; i++) {
     const p = patternParts[i];
     if (p.startsWith(":")) {
-      params[p.slice(1)] = decodeURIComponent(pathParts[i]);
+      try {
+        params[p.slice(1)] = decodeURIComponent(pathParts[i]);
+      } catch {
+        return null;
+      }
     } else if (p !== pathParts[i]) {
       return null;
     }

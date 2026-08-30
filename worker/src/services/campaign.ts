@@ -102,7 +102,7 @@ export async function processCampaignBatch(
         sub.endpoint,
         vapid.pkcs8,
         vapid.publicKey,
-        "mailto:push@localhost"
+        env.VAPID_SUBJECT || "mailto:push@localhost"
       );
 
       const outcome = await sendPush(
@@ -122,11 +122,15 @@ export async function processCampaignBatch(
 
       if (outcome.result === "success") {
         success++;
-        await markSuccess(env, sub.id);
+        await markSuccess(env, sub.id).catch((err) =>
+          console.error("mark_success_error", sub.id, err)
+        );
       } else {
         failed++;
         if (outcome.result === "gone") {
-          await markExpired(env, sub.id);
+          await markExpired(env, sub.id).catch((err) =>
+            console.error("mark_expired_error", sub.id, err)
+          );
         }
         // Detailed log for failures only; successes stay aggregate counters.
         await env.DB.prepare(

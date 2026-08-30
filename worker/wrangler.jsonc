@@ -23,7 +23,9 @@
 
   "vars": {
     "BATCH_SIZE": "5",
-    "MAX_BODY_BYTES": "8192"
+    "MAX_BODY_BYTES": "8192",
+    // Replace with a real contact address (mailto: or https:) before going live.
+    "VAPID_SUBJECT": "mailto:push@example.com"
   }
 
   // Required secrets (set with `npx wrangler secret put`):

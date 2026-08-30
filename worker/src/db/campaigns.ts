@@ -83,7 +83,7 @@ export async function startCampaign(env: Env, id: number): Promise<boolean> {
     `UPDATE campaigns
      SET status = 'processing', started_at = CURRENT_TIMESTAMP,
          updated_at = CURRENT_TIMESTAMP
-     WHERE id = ? AND status IN ('draft', 'queued')`
+     WHERE id = ? AND status IN ('draft', 'queued', 'scheduled')`
   )
     .bind(id)
     .run();
@@ -194,6 +194,25 @@ export async function dueScheduledCampaigns(
     `SELECT * FROM campaigns
      WHERE status = 'scheduled' AND scheduled_at <= datetime('now')
      ORDER BY id ASC LIMIT ?`
+  )
+    .bind(limit)
+    .all<CampaignRow>();
+  return result.results ?? [];
+}
+
+/**
+ * Campaigns stuck in 'processing' with no active lease — the self-chaining
+ * continuation fetch died somewhere and nothing is currently draining them.
+ */
+export async function staleProcessingCampaigns(
+  env: Env,
+  limit: number
+): Promise<CampaignRow[]> {
+  const result = await env.DB.prepare(
+    `SELECT * FROM campaigns
+     WHERE status = 'processing'
+       AND (lease_expires_at IS NULL OR lease_expires_at < datetime('now'))
+     ORDER BY updated_at ASC LIMIT ?`
   )
     .bind(limit)
     .all<CampaignRow>();

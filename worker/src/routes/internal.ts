@@ -1,6 +1,7 @@
 import type { Route } from "../router";
 import { jsonError } from "../services/auth";
 import { jsonResponse } from "../services/cors";
+import { timingSafeEqual } from "../services/crypto";
 import { processCampaignBatch } from "../services/campaign";
 
 /**
@@ -16,7 +17,7 @@ async function internalProcess(
   if (
     !match ||
     !ctx.env.INTERNAL_JOB_SECRET ||
-    match[1] !== ctx.env.INTERNAL_JOB_SECRET
+    !timingSafeEqual(match[1], ctx.env.INTERNAL_JOB_SECRET)
   ) {
     return jsonError(403, "forbidden");
   }
@@ -36,7 +37,7 @@ async function internalProcess(
       fetch(`${ctx.url.origin}/v1/internal/process?campaign_id=${id}`, {
         method: "POST",
         headers: { Authorization: `Bearer ${ctx.env.INTERNAL_JOB_SECRET}` },
-      }).catch(() => {})
+      }).catch((err) => console.error("self_chain_fetch_error", id, err))
     );
   }
 

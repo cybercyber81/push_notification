@@ -30,6 +30,18 @@ export function b64urlDecode(value: string): Uint8Array {
   return out;
 }
 
+/** Constant-time string comparison; avoids leaking secret length/prefix via timing. */
+export function timingSafeEqual(a: string, b: string): boolean {
+  const aBytes = utf8(a);
+  const bBytes = utf8(b);
+  const len = Math.max(aBytes.length, bBytes.length);
+  let diff = aBytes.length ^ bBytes.length;
+  for (let i = 0; i < len; i++) {
+    diff |= (aBytes[i] ?? 0) ^ (bBytes[i] ?? 0);
+  }
+  return diff === 0;
+}
+
 export async function sha256Hex(input: string): Promise<string> {
   const digest = await crypto.subtle.digest("SHA-256", utf8(input));
   return [...new Uint8Array(digest)]
