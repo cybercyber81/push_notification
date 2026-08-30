@@ -1,6 +1,5 @@
 export interface Env {
   DB: D1Database;
-  ASSETS: Fetcher;
   INTERNAL_JOB_SECRET: string;
   ADMIN_AUTH_SECRET: string;
   VAPID_MASTER_ENCRYPTION_KEY: string;
